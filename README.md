@@ -1,0 +1,1 @@
+Simplistic is a simplistic keyer. Yes! Yet another one. I wanted very simple but reliable keyer with correct timing. I could have use one of my rigs but it seems a s fun project to do. So I've done it. Debouncing and signal forming are done on timer interrupts. It is nowhere perfect but seems close enough to my Elecrafts.  
