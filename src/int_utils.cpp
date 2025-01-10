@@ -87,7 +87,8 @@ void enableTimer1(bool enable) {
     if (enable) {
         TIMSK1 |= (1 << OCIE1A) | (1 << OCIE1B) | (1 << TOIE1);
     } else {
-        TIMSK1 &= ~(1 << OCIE1A | (1 << OCIE1B) | (1 << TOIE1));
+        TIMSK1 = 0;     // disable interupts
+        TCCR1B = 0;     // Stop Timer 1
     }
 }
 

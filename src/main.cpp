@@ -75,11 +75,8 @@ void read_speed() {
         return;
     UNIT = 1200.0/(min_speed_wps + (max_speed_wps - min_speed_wps)*((float)val/1023.0));
     speed_val = val;
-    ctxForTiming(ctxs[DIT], UNIT, UNIT, UNIT);
-    ctxForTiming(ctxs[DAT], 3*UNIT, UNIT, 2*UNIT);
-    // Serial.print(val);
-    // Serial.print(" : ");
-    // Serial.println(UNIT);
+    ctxForTiming(ctxs[DIT], UNIT, UNIT, 1.5*UNIT);
+    ctxForTiming(ctxs[DAT], 3*UNIT, UNIT, 3.5*UNIT);
 }
 
 
@@ -116,7 +113,6 @@ void process_dd_buffer() {
 void read_paddles1() { // FIX it read whole port instead of digitalRead
     static unsigned sel = 0;
     auto ready = sel == DIT ? (gSendState != kSendingDIT) : (gSendState != kSendingDAH);
-    //auto ready = (gSendState != kSendingDIT) && (gSendState != kSendingDAH); 
     if (ready && !sendBuf[sel]) {
         auto val = digitalRead(paddlePins[sel]);
         if (val == LOW)
