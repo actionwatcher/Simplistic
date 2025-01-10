@@ -46,35 +46,34 @@ void addTask(task_t** tasks, processing_unit_t task) {
 }
 
 unsigned short
-DIT = 0,
-DAT = 1,
-PAU = 2;
+    DIT = 0,
+    DAT = 1,
+    PAU = 2;
 
 const unsigned short
     max_speed_wps = 35, // 34 ms
     min_speed_wps = 15; // 80 ms
-const unsigned kMSBeforSwitchingMode = 5000; // five seconds continous press before switching between paddles and key
+
 unsigned
-speed_wps = min_speed_wps,
-UNIT = 1200/speed_wps;
+    speed_wps = min_speed_wps,
+    UNIT = 1200/speed_wps;
 
 static unsigned short paddlePins[] = {kKeyerLeftPaddle, kKeyerRightPaddle};
-//static unsigned durations[] = {UNIT, 3*UNIT, UNIT};
-static TimerCtx ctxs[2];
+TimerCtx ctxs[2];
 bool LED_STATE = false;
 wkstate_t gSendState = wkstate_t::kDone;
 FIFOBuffer ditsdahs(2);
-bool sendBuf[] = {false, false}; // dit, dah
+bool sendBuf[] = {false, false}; // dit, dah buffer
 
 void read_speed() {
     if (gSendState != kDone)
         return;
-    static int speed_val = 0;
+    static int current_val = 0;
     auto val = analogRead(kKeyerSpeed);
-    if (abs(val - speed_val) <= 10)
+    if (abs(val - current_val) <= 10)
         return;
     UNIT = 1200.0/(min_speed_wps + (max_speed_wps - min_speed_wps)*((float)val/1023.0));
-    speed_val = val;
+    current_val = val;
     ctxForTiming(ctxs[DIT], UNIT, UNIT, 1.5*UNIT);
     ctxForTiming(ctxs[DAT], 3*UNIT, UNIT, 3.5*UNIT);
 }
