@@ -35,41 +35,13 @@ uint8_t calculatePrescalerRegister(uint16_t prescaler) {
 } 
 
 /** pulic interface */
-void setupTimer1ForDuration(uint32_t milliseconds) {
-    auto prescaler = calculatePrescaler(milliseconds);
-    auto comparatorValue = calculateComparatorValue(milliseconds, prescaler);
-    TCCR1A = 0; // set entire TCCR1A register to 0
-    TCCR1B = 0; // same for TCCR1B
-    TCNT1  = 0; // initialize counter value to 0
-    // set compare match register for 1hz increments
-    OCR1A = comparatorValue;
-    // turn on CTC mode
-    //TCCR1B |= (1 << WGM12);
-    // Set CS12 and CS10 bits for 1024 prescaler
-    TCCR1B |= calculatePrescalerRegister(prescaler);
-}
-
-void setupTimer1ForDurations(uint32_t signal_milliseconds, uint32_t pause_milliseconds, uint32_t debounce_ms) {
-    auto prescaler = calculatePrescaler(signal_milliseconds + pause_milliseconds);
-    auto signalComparatorValue = calculateComparatorValue(signal_milliseconds, prescaler);
-    auto pauseComparatorValue = calculateComparatorValue(pause_milliseconds + signal_milliseconds, prescaler);
-    auto debounceComparatorValue = min(calculateComparatorValue(debounce_ms, prescaler), pauseComparatorValue);
-    TCCR1A = 0; // set entire TCCR1A register to 0
-    TCCR1B = 0; // same for TCCR1B
-    TCNT1  = 65536 - pauseComparatorValue; // initialize counter value to 0
-    // set compare match register for 1hz increments
-    OCR1A = signalComparatorValue + 65536 - pauseComparatorValue;
-    OCR1B = debounceComparatorValue - 65536 - pauseComparatorValue;
-    TCCR1B |= calculatePrescalerRegister(prescaler);
-}
 
 void ctxForTiming(TimerCtx& ctx, uint32_t signal_milliseconds, uint32_t pause_milliseconds, uint32_t debounce_ms) {
     auto prescaler = calculatePrescaler(signal_milliseconds + pause_milliseconds);
     auto signalComparatorValue = calculateComparatorValue(signal_milliseconds, prescaler);
     auto pauseComparatorValue = calculateComparatorValue(pause_milliseconds + signal_milliseconds, prescaler);
     auto debounceComparatorValue = min(calculateComparatorValue(debounce_ms, prescaler), pauseComparatorValue);
-    ctx.offset = 65536 - pauseComparatorValue; // initialize counter value to 0
-    // set compare match register for 1hz increments
+    ctx.offset = 65536 - pauseComparatorValue; // initialize counter so that end of signal + pause was at overflow
     ctx.signal_comparator = signalComparatorValue + ctx.offset;
     ctx.debounce_comparator = debounceComparatorValue + ctx.offset;
     ctx.prescaler = calculatePrescalerRegister(prescaler);
@@ -90,12 +62,4 @@ void enableTimer1(bool enable) {
         TIMSK1 = 0;     // disable interupts
         TCCR1B = 0;     // Stop Timer 1
     }
-}
-
-void printCtx(const char * const prefix, const TimerCtx& ctx) {
-    Serial.print(prefix);
-    Serial.print(" Prescaler: "); Serial.print(ctx.prescaler);
-    Serial.print(", Offset: "); Serial.print(ctx.offset);
-    Serial.print(", Signal: "); Serial.print(ctx.signal_comparator);
-    Serial.print(", Debounce: "); Serial.println(ctx.debounce_comparator);
 }

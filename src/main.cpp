@@ -1,28 +1,8 @@
 #include <Arduino.h>
-
-
-// Core library for code-sense - IDE-based
-#if defined(ENERGIA) // LaunchPad specific
-#include "Energia.h"
-#elif defined(TEENSYDUINO) // Teensy specific
-#include "Arduino.h"
-#elif defined(ESP8266) // ESP8266 specific
-#include "Arduino.h"
-#elif defined(ARDUINO) // Arduino 1.8 specific
-#include "Arduino.h"
-#else // error
-#error Platform not defined
-#endif // end IDE
-
 #include "Pinout.h"
 
-#include "fifobuffer.h"
 #include "int_utils.h"
 #include "local_types.h"
-
-#define NOT_PRESSED HIGH
-#define PRESSED LOW
-#define STRAIGHT 0
 
 static const unsigned long kKeyerTone = 600; //Hz
 
@@ -62,7 +42,6 @@ static unsigned short paddlePins[] = {kKeyerLeftPaddle, kKeyerRightPaddle};
 TimerCtx ctxs[2];
 bool LED_STATE = false;
 wkstate_t gSendState = wkstate_t::kDone;
-FIFOBuffer ditsdahs(2);
 bool sendBuf[] = {false, false}; // dit, dah buffer
 
 void read_speed() {
@@ -109,7 +88,7 @@ void process_dd_buffer() {
     sel = (sel + 1) % 2;
 }
 
-void read_paddles1() { // FIX it read whole port instead of digitalRead
+void read_paddles() { // FIX it read whole port instead of digitalRead
     static unsigned sel = 0;
     auto ready = sel == DIT ? (gSendState != kSendingDIT) : (gSendState != kSendingDAH);
     if (ready && !sendBuf[sel]) {
@@ -142,7 +121,7 @@ void InitKeyer() {
     pinMode(kLEDPin, OUTPUT);
     pinMode(kKeyerAudio, OUTPUT);
     pinMode(kKeyerSpeed, INPUT);
-    addTask(&tasks, read_paddles1);
+    addTask(&tasks, read_paddles);
     addTask(&tasks, process_dd_buffer);
     addTask(&tasks, read_speed);
 }
