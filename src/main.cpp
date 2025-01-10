@@ -125,12 +125,12 @@ ISR(TIMER1_COMPA_vect){
   keyUp();
 }
 
-// second timer - pause off
+// second timer - deboucne off
 ISR(TIMER1_COMPB_vect){
    gSendState = kWaiting;      //Allow paddle polling
 }
 
-// second timer - pause off
+// overflow can fire next timer
 ISR(TIMER1_OVF_vect){
   enableTimer1(false);
   gSendState = kDone;
