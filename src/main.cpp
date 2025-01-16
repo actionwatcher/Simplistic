@@ -27,7 +27,7 @@ void addTask(task_t** tasks, processing_unit_t task) {
 
 unsigned short
     DIT = 0,
-    DAT = 1,
+    DAH = 1,
     PAU = 2;
 
 const unsigned short
@@ -44,7 +44,7 @@ bool LED_STATE = false;
 wkstate_t gSendState = wkstate_t::kDone;
 bool sendBuf[] = {false, false}; // dit, dah buffer
 
-void read_speed() {
+void readSpeed() {
     if (gSendState != kDone)
         return;
     static int current_val = 0;
@@ -54,7 +54,7 @@ void read_speed() {
     UNIT = 1200.0/(min_speed_wps + (max_speed_wps - min_speed_wps)*((float)val/1023.0));
     current_val = val;
     ctxForTiming(ctxs[DIT], UNIT, UNIT, 1.5*UNIT);
-    ctxForTiming(ctxs[DAT], 3*UNIT, UNIT, 3.5*UNIT);
+    ctxForTiming(ctxs[DAH], 3*UNIT, UNIT, 3.5*UNIT);
 }
 
 
@@ -70,7 +70,7 @@ inline void keyUp() {
     digitalWrite(LED_BUILTIN, LED_STATE);
 }
 
-void process_dd_buffer() {
+void send() {
     static unsigned sel = 0;
     if (gSendState != kDone) {
         return;
@@ -81,14 +81,13 @@ void process_dd_buffer() {
             gSendState = kSendingDIT;
         else
             gSendState = kSendingDAH;
-        setupTimer1(ctxs[sel]);
         keyDown();
-        enableTimer1(true);
+        startTimer1(ctxs[sel]);
     }
     sel = (sel + 1) % 2;
 }
 
-void read_paddles() { // FIX it read whole port instead of digitalRead
+void readPaddles() { // FIX it read whole port instead of digitalRead
     static unsigned sel = 0;
     auto ready = sel == DIT ? (gSendState != kSendingDIT) : (gSendState != kSendingDAH);
     if (ready && !sendBuf[sel]) {
@@ -111,35 +110,32 @@ ISR(TIMER1_COMPB_vect){
 
 // overflow can fire next timer
 ISR(TIMER1_OVF_vect){
-  enableTimer1(false);
+  stopTimer1();
   gSendState = kDone;
 }
 
-void InitKeyer() {
+void initKeyer() {
     pinMode(paddlePins[DIT], INPUT_PULLUP);
-    pinMode(paddlePins[DAT], INPUT_PULLUP);
+    pinMode(paddlePins[DAH], INPUT_PULLUP);
     pinMode(kLEDPin, OUTPUT);
     pinMode(kKeyerAudio, OUTPUT);
     pinMode(kKeyerSpeed, INPUT);
-    addTask(&tasks, read_paddles);
-    addTask(&tasks, process_dd_buffer);
-    addTask(&tasks, read_speed);
+    addTask(&tasks, readPaddles);
+    addTask(&tasks, send);
+    addTask(&tasks, readSpeed);
 }
 
-void ProcessKeyer() {
+void processTasks() {
     static task_t *current_task = tasks;
     current_task->run();
     current_task = current_task->next;
 }
 
 
-void setup()
-{
-    //Serial.begin(9600);
-    InitKeyer();
+void setup() {
+    initKeyer();
 }
 
-void loop()
-{
-    ProcessKeyer();
+void loop() {
+    processTasks();
 }

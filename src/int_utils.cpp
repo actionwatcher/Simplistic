@@ -47,19 +47,17 @@ void ctxForTiming(TimerCtx& ctx, uint32_t signal_milliseconds, uint32_t pause_mi
     ctx.prescaler = calculatePrescalerRegister(prescaler);
 }
 
-void setupTimer1(const TimerCtx& ctx) {
+void startTimer1(const TimerCtx& ctx) {
     TCCR1A = 0;
     TCCR1B = 0;
     TCNT1  = ctx.offset; // initialize counter value to 0
     OCR1A = ctx.signal_comparator;
     OCR1B = ctx.debounce_comparator;
     TCCR1B |= ctx.prescaler;
+    TIMSK1 |= (1 << OCIE1A) | (1 << OCIE1B) | (1 << TOIE1); // comp A, B and OVERFLOW
 }
-void enableTimer1(bool enable) {
-    if (enable) {
-        TIMSK1 |= (1 << OCIE1A) | (1 << OCIE1B) | (1 << TOIE1);
-    } else {
-        TIMSK1 = 0;     // disable interupts
-        TCCR1B = 0;     // Stop Timer 1
-    }
+
+void stopTimer1() {
+    TIMSK1 = 0;     // disable interupts
+    TCCR1B = 0;     // Stop Timer 1
 }

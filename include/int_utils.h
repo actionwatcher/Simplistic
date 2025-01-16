@@ -9,6 +9,6 @@ typedef struct{
         debounce_comparator{0};
 } TimerCtx;
 
-void enableTimer1(bool enable);
-void setupTimer1(const TimerCtx& ctx);
+void stopTimer1();
+void startTimer1(const TimerCtx& ctx);
 void ctxForTiming(TimerCtx& ctx, uint32_t signal_milliseconds, uint32_t pause_milliseconds, uint32_t debounce_ms);
